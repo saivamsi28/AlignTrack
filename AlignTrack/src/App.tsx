@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import GoalForm from './components/GoalForm';
 import GoalList from './components/GoalList';
+import CheckInBoard from './components/CheckInBoard'; 
 import type { Goal, Role, SheetStatus } from './types/index';
 import './index.css';
 
@@ -101,6 +102,32 @@ export default function App() {
         role={role}
         sheetStatus={sheetStatus}
       />
+ {/* Phase Routing: If Approved, show Phase 2. If not, show Phase 1 */}
+      {sheetStatus === 'Approved' ? (
+        
+        <CheckInBoard 
+          goals={goals} 
+          role={role} 
+          onUpdateGoal={handleUpdateGoal} 
+        />
+
+      ) : (
+        
+        <>
+          {role === 'Employee' && (sheetStatus === 'Draft' || sheetStatus === 'Rework') && (
+            <GoalForm onAddGoal={handleAddGoal} currentTotalWeightage={totalWeightage} currentGoalCount={goals.length} />
+          )}
+          
+          <GoalList 
+            goals={goals} 
+            onRemoveGoal={handleRemoveGoal} 
+            onUpdateGoal={handleUpdateGoal}
+            role={role}
+            sheetStatus={sheetStatus}
+          />
+        </>
+
+      )}
     </div>
   );
 }
