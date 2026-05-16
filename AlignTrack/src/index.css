@@ -1,0 +1,14 @@
+* { box-sizing: border-box; font-family: system-ui, sans-serif; }
+body { background-color: #f4f4f9; margin: 0; padding: 20px; color: #333; }
+.container { max-width: 900px; margin: 0 auto; display: grid; gap: 20px; }
+.card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.form-group { margin-bottom: 15px; display: flex; flex-direction: column; }
+.form-group label { font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+input, select, textarea { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+button { background: #0056b3; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+button:hover { background: #004494; }
+button:disabled { background: #ccc; cursor: not-allowed; }
+.error { color: #d9534f; font-size: 14px; margin-bottom: 15px; font-weight: bold;}
+.goal-item { border: 1px solid #eee; padding: 15px; margin-bottom: 10px; border-radius: 4px; }
+.progress-bar-container { background: #eee; height: 20px; border-radius: 10px; overflow: hidden; margin: 10px 0; }
+.progress-bar { background: #28a745; height: 100%; transition: width 0.3s; }
