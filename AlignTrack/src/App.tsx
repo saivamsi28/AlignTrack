@@ -5,7 +5,7 @@ import CheckInBoard from './components/CheckInBoard';
 import type { Goal, Role, SheetStatus, Cycle, AuditLog } from './types/index';
 import './index.css';
 
-const API_BASE = 'http://127.0.0.1:8000';
+const API_BASE = 'https://aligntrack-backend.onrender.com';
 
 export default function App() {
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -150,7 +150,7 @@ export default function App() {
       cycle: 'Phase 1 (Setup)'
     } as any);
   };
-  
+
   const downloadCSV = () => {
     const headers = "Goal Title,Thrust Area,Target,Weightage,Actual Achievement,Status,Manager Comment\n";
     const rows = goals.map(g => `"${g.title}","${g.thrustArea}","${g.target}","${g.weightage}%","${g.actualAchievement || 'N/A'}","${g.progressStatus || 'Not Started'}","${g.managerComment || ''}"`).join("\n");
