@@ -82,7 +82,8 @@ export default function GoalList({ goals, onRemoveGoal, onUpdateGoal, role, shee
             </div>
           ) : (
             <div style={{ marginTop: '10px' }}>
-              <p><strong>Target:</strong> {goal.target} [{goal.uom}]</p>
+              <p><strong>Target:</strong> {goal.target}</p>
+              <p><strong>Measurement Type:</strong> {goal.uom}</p>
               <p><strong>Weightage:</strong> <span style={{ fontSize: '18px', fontWeight: 'bold' }}>{goal.weightage}%</span></p>
               
               {/* Show edit button if the sheet is not locked */}

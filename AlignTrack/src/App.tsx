@@ -14,11 +14,28 @@ export default function App() {
   const [currentCycle, setCurrentCycle] = useState<Cycle>('Phase 1 (Setup)');
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
 
-  // 1. LOAD DATA FROM PYTHON ON STARTUP
+  // 1. LOAD DATA FROM PYTHON ON STARTUP (Translate snake_case to camelCase)
   useEffect(() => {
     fetch(`${API_BASE}/goals`)
       .then(res => res.json())
-      .then(data => setGoals(data))
+      .then(data => {
+        const formattedGoals = data.map((g: any) => ({
+          id: g.id,
+          thrustArea: g.thrust_area,
+          title: g.title,
+          description: g.description,
+          uom: g.uom,
+          target: g.target,
+          weightage: g.weightage,
+          isShared: g.is_shared,
+          sheetStatus: g.sheet_status,
+          actualAchievement: g.actual_achievement,
+          progressStatus: g.progress_status,
+          managerComment: g.manager_comment,
+          cycle: g.cycle
+        }));
+        setGoals(formattedGoals);
+      })
       .catch(err => console.error("Database connection error:", err));
 
     fetch(`${API_BASE}/audit-logs`)
@@ -45,21 +62,38 @@ export default function App() {
     }
   };
 
-  // 3. SAVE NEW GOALS TO PYTHON
-  const handleAddGoal = async (newGoal: Goal) => {
+  // 3. SAVE NEW GOALS TO PYTHON (Translate camelCase to snake_case)
+  const handleAddGoal = async (newGoal: any) => {
+    const payload = {
+      id: newGoal.id,
+      thrust_area: newGoal.thrustArea,
+      title: newGoal.title,
+      description: newGoal.description,
+      uom: newGoal.uom,
+      target: newGoal.target,
+      weightage: newGoal.weightage,
+      is_shared: newGoal.isShared,
+      sheet_status: newGoal.sheetStatus,
+      actual_achievement: newGoal.actualAchievement,
+      progress_status: newGoal.progressStatus,
+      manager_comment: newGoal.managerComment,
+      cycle: newGoal.cycle
+    };
+
     try {
       const res = await fetch(`${API_BASE}/goals`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newGoal)
+        body: JSON.stringify(payload)
       });
-      const savedGoal = await res.json();
-      setGoals([...goals, savedGoal]);
+      if (!res.ok) throw new Error("Failed to save");
+      setGoals([...goals, newGoal]);
     } catch (err) {
       console.error("Failed to save goal", err);
     }
   };
 
+  // 4. DELETE GOAL
   const handleRemoveGoal = async (id: string) => {
     try {
       await fetch(`${API_BASE}/goals/${id}`, { method: 'DELETE' });
@@ -69,16 +103,32 @@ export default function App() {
     }
   };
   
-  // 4. UPDATE GOALS IN PYTHON (Check-ins, Approvals)
-  const handleUpdateGoal = async (updatedGoal: Goal) => {
+  // 5. UPDATE GOALS IN PYTHON (Translate camelCase to snake_case)
+  const handleUpdateGoal = async (updatedGoal: any) => {
+    const payload = {
+      id: updatedGoal.id,
+      thrust_area: updatedGoal.thrustArea,
+      title: updatedGoal.title,
+      description: updatedGoal.description,
+      uom: updatedGoal.uom,
+      target: updatedGoal.target,
+      weightage: updatedGoal.weightage,
+      is_shared: updatedGoal.isShared,
+      sheet_status: updatedGoal.sheetStatus,
+      actual_achievement: updatedGoal.actualAchievement,
+      progress_status: updatedGoal.progressStatus,
+      manager_comment: updatedGoal.managerComment,
+      cycle: updatedGoal.cycle
+    };
+
     try {
       const res = await fetch(`${API_BASE}/goals/${updatedGoal.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedGoal)
+        body: JSON.stringify(payload)
       });
-      const savedGoal = await res.json();
-      setGoals(goals.map(g => g.id === savedGoal.id ? savedGoal : g));
+      if (!res.ok) throw new Error("Failed to update");
+      setGoals(goals.map(g => g.id === updatedGoal.id ? updatedGoal : g));
     } catch (err) {
       console.error("Failed to update goal", err);
     }
@@ -94,10 +144,13 @@ export default function App() {
       uom: 'Max (Numeric / %)', 
       target: '15', 
       weightage: 10, 
-      isShared: true
-    });
+      isShared: true,
+      sheetStatus: 'Draft',
+      progressStatus: 'Not Started',
+      cycle: 'Phase 1 (Setup)'
+    } as any);
   };
-
+  
   const downloadCSV = () => {
     const headers = "Goal Title,Thrust Area,Target,Weightage,Actual Achievement,Status,Manager Comment\n";
     const rows = goals.map(g => `"${g.title}","${g.thrustArea}","${g.target}","${g.weightage}%","${g.actualAchievement || 'N/A'}","${g.progressStatus || 'Not Started'}","${g.managerComment || ''}"`).join("\n");
