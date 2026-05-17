@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { Goal, Role, SheetStatus } from '../types/index';
 
 interface GoalListProps {

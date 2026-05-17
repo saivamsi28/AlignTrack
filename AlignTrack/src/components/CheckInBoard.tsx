@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { Goal, Role, Cycle, AuditLog } from '../types/index';
 
 interface CheckInBoardProps {
