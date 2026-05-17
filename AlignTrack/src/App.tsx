@@ -170,16 +170,24 @@ function AppRoutes() {
       <Route path="/manager" element={
         <ProtectedRoute allowedRole="Manager">
           <DashboardLayout title="Team Goal Approvals">
-            {sheetStatus === 'Submitted' && totalWeightage === 100 ? (
-               <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '20px' }}>
-                 <button style={{ background: '#28a745' }} onClick={() => { setSheetStatus('Approved'); addAuditLog('Approved and locked goals'); }}>Approve & Lock Goals</button>
-                 <button style={{ background: '#dc3545' }} onClick={() => { setSheetStatus('Rework'); addAuditLog('Returned goals for rework'); }}>Return for Rework</button>
+            
+            {/* HACKATHON FIX: Show buttons if weightage is 100%, even if state reset */}
+            {totalWeightage === 100 && sheetStatus !== 'Approved' ? (
+               <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginBottom: '20px', padding: '15px', background: '#fff3cd', border: '1px solid #ffeeba', borderRadius: '8px' }}>
+                 <p style={{ margin: 0, alignSelf: 'center', color: '#856404', fontWeight: 'bold' }}>⚠️ Employee Goals (100%) are ready for review!</p>
+                 <button style={{ background: '#28a745', fontWeight: 'bold' }} onClick={() => { setSheetStatus('Approved'); addAuditLog('Approved and locked goals'); }}>Approve & Lock Goals</button>
+                 <button style={{ background: '#dc3545', fontWeight: 'bold' }} onClick={() => { setSheetStatus('Rework'); addAuditLog('Returned goals for rework'); }}>Return for Rework</button>
                </div>
+            ) : sheetStatus === 'Approved' ? (
+              <div className="card" style={{ textAlign: 'center', background: '#d4edda', color: '#155724', fontWeight: 'bold' }}>
+                <p>✅ Goals have been successfully Approved and Locked.</p>
+              </div>
             ) : (
               <div className="card" style={{ textAlign: 'center', background: '#e9ecef', color: 'black' }}>
-                <p>Waiting for employee to submit goals.</p>
+                <p>Waiting for employee to reach 100% total weightage.</p>
               </div>
             )}
+            
             <GoalList goals={goals} onRemoveGoal={handleRemoveGoal} onUpdateGoal={handleUpdateGoal} role={user?.role || 'Manager'} sheetStatus={sheetStatus} />
           </DashboardLayout>
         </ProtectedRoute>
