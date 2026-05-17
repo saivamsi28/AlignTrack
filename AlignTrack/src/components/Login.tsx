@@ -11,15 +11,19 @@ export default function Login() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // MOCK DATABASE LOOKUP (Fulfills presentation of credentials)
-    if (username === 'emp' && password === 'pass') {
-      login('John Doe', 'Employee');
+    // Snip off any accidental spaces at the beginning or end
+    const cleanUsername = username.trim();
+    const cleanPassword = password.trim();
+    
+    // Check the cleaned strings instead of the raw input
+    if (cleanUsername === 'emp' && cleanPassword === 'pass') {
+      login('JS Rangi', 'Employee');
       navigate('/employee');
-    } else if (username === 'mgr' && password === 'pass') {
-      login('Jane Smith', 'Manager');
+    } else if (cleanUsername === 'mgr' && cleanPassword === 'pass') {
+      login('ND Modi', 'Manager');
       navigate('/manager');
-    } else if (username === 'admin' && password === 'pass') {
-      login('HR Admin', 'Admin');
+    } else if (cleanUsername === 'admin' && cleanPassword === 'pass') {
+      login('N Raman', 'Admin');
       navigate('/admin');
     } else {
       alert('Invalid credentials! Try emp/pass, mgr/pass, or admin/pass');
