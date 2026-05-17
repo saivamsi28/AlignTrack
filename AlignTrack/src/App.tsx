@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import GoalForm from './components/GoalForm';
 import GoalList from './components/GoalList';
 import CheckInBoard from './components/CheckInBoard';
 import type { Goal, Role, SheetStatus, Cycle, AuditLog } from './types/index';
 import './index.css';
+
+const API_BASE = 'http://127.0.0.1:8000';
 
 export default function App() {
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -12,27 +14,90 @@ export default function App() {
   const [currentCycle, setCurrentCycle] = useState<Cycle>('Phase 1 (Setup)');
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
 
+  // 1. LOAD DATA FROM PYTHON ON STARTUP
+  useEffect(() => {
+    fetch(`${API_BASE}/goals`)
+      .then(res => res.json())
+      .then(data => setGoals(data))
+      .catch(err => console.error("Database connection error:", err));
+
+    fetch(`${API_BASE}/audit-logs`)
+      .then(res => res.json())
+      .then(data => setAuditLogs(data))
+      .catch(err => console.error("Database connection error:", err));
+  }, []);
+
   const totalWeightage = goals.reduce((sum, goal) => sum + goal.weightage, 0);
 
-  const addAuditLog = (action: string) => {
-    setAuditLogs(prev => [{ id: crypto.randomUUID(), timestamp: new Date().toLocaleString(), action }, ...prev]);
+  // 2. SAVE AUDIT LOGS TO PYTHON
+  const addAuditLog = async (action: string) => {
+    const newLog = { id: crypto.randomUUID(), action: action };
+    try {
+      const res = await fetch(`${API_BASE}/audit-logs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newLog)
+      });
+      const savedLog = await res.json();
+      setAuditLogs(prev => [savedLog, ...prev]);
+    } catch (err) {
+      console.error("Failed to save audit log", err);
+    }
   };
 
-  const handleAddGoal = (newGoal: Goal) => setGoals([...goals, newGoal]);
-  const handleRemoveGoal = (id: string) => setGoals(goals.filter(goal => goal.id !== id));
+  // 3. SAVE NEW GOALS TO PYTHON
+  const handleAddGoal = async (newGoal: Goal) => {
+    try {
+      const res = await fetch(`${API_BASE}/goals`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newGoal)
+      });
+      const savedGoal = await res.json();
+      setGoals([...goals, savedGoal]);
+    } catch (err) {
+      console.error("Failed to save goal", err);
+    }
+  };
+
+  const handleRemoveGoal = async (id: string) => {
+    try {
+      await fetch(`${API_BASE}/goals/${id}`, { method: 'DELETE' });
+      setGoals(goals.filter(goal => goal.id !== id));
+    } catch (err) {
+      console.error("Failed to delete goal", err);
+    }
+  };
   
-  const handleUpdateGoal = (updatedGoal: Goal) => {
-    setGoals(goals.map(g => g.id === updatedGoal.id ? updatedGoal : g));
+  // 4. UPDATE GOALS IN PYTHON (Check-ins, Approvals)
+  const handleUpdateGoal = async (updatedGoal: Goal) => {
+    try {
+      const res = await fetch(`${API_BASE}/goals/${updatedGoal.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedGoal)
+      });
+      const savedGoal = await res.json();
+      setGoals(goals.map(g => g.id === savedGoal.id ? savedGoal : g));
+    } catch (err) {
+      console.error("Failed to update goal", err);
+    }
   };
 
   const pushSharedGoal = () => {
     if (goals.length >= 8) return alert("Maximum limit of 8 goals reached.");
     handleAddGoal({
-      id: crypto.randomUUID(), thrustArea: 'Corporate Operations', title: 'Reduce Operational Costs (Dept KPI)',
-      description: 'Departmental KPI mandated by leadership.', uom: 'Max (Numeric / %)', target: '15', weightage: 10, isShared: true
+      id: crypto.randomUUID(), 
+      thrustArea: 'Corporate Operations', 
+      title: 'Reduce Operational Costs (Dept KPI)',
+      description: 'Departmental KPI mandated by leadership.', 
+      uom: 'Max (Numeric / %)', 
+      target: '15', 
+      weightage: 10, 
+      isShared: true
     });
   };
-  // CSV Generation Script
+
   const downloadCSV = () => {
     const headers = "Goal Title,Thrust Area,Target,Weightage,Actual Achievement,Status,Manager Comment\n";
     const rows = goals.map(g => `"${g.title}","${g.thrustArea}","${g.target}","${g.weightage}%","${g.actualAchievement || 'N/A'}","${g.progressStatus || 'Not Started'}","${g.managerComment || ''}"`).join("\n");
@@ -47,7 +112,6 @@ export default function App() {
 
   return (
     <div className="container">
-      {/* Universal Top Bar (Time Machine & Role Switcher) */}
       <div className="card" style={{ display: 'flex', justifyContent: 'space-between', background: '#343a40', color: 'white', alignItems: 'center' }}>
         <div>
           <strong>Demo Role:</strong>
@@ -68,10 +132,9 @@ export default function App() {
       </div>
 
       <header className="card" style={{ textAlign: 'center' }}>
-        <h1>AlignTrack</h1>
+        <h1>AtomQuest: Goal Setting Portal</h1>
         <p>Status: <strong style={{ color: sheetStatus === 'Approved' ? '#28a745' : (sheetStatus === 'Rework' ? '#dc3545' : '#ffc107') }}>{sheetStatus.toUpperCase()}</strong></p>
         
-        {/* Admin Dashboard */}
         {role === 'Admin' && (
            <div style={{ background: '#f8d7da', padding: '15px', borderRadius: '6px', border: '1px solid #f5c6cb' }}>
              <h3>Admin & HR Governance Dashboard</h3>
@@ -86,7 +149,6 @@ export default function App() {
            </div>
         )}
 
-        {/* Phase 1 Progress Bar (Only show if not approved) */}
         {sheetStatus !== 'Approved' && (
           <>
             <div className="progress-bar-container">
@@ -96,7 +158,6 @@ export default function App() {
           </>
         )}
         
-        {/* Employee Controls */}
         {role === 'Employee' && (sheetStatus === 'Draft' || sheetStatus === 'Rework') && (
           <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
             <button style={{ background: '#17a2b8', flex: 1 }} onClick={pushSharedGoal}>Simulate Receiving Shared KPI</button>
@@ -109,7 +170,6 @@ export default function App() {
           </div>
         )}
 
-        {/* Manager Controls */}
         {role === 'Manager' && sheetStatus === 'Submitted' && totalWeightage === 100 && (
            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
              <button style={{ background: '#28a745', flex: 1 }} onClick={() => { setSheetStatus('Approved'); addAuditLog('Manager approved and locked goals'); }}>Approve & Lock Goals</button>
@@ -118,7 +178,6 @@ export default function App() {
         )}
       </header>
 
-      {/* Phase Routing */}
       {sheetStatus === 'Approved' ? (
         <CheckInBoard goals={goals} role={role} onUpdateGoal={handleUpdateGoal} currentCycle={currentCycle} addAuditLog={addAuditLog} auditLogs={auditLogs} />
       ) : (
