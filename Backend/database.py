@@ -1,22 +1,21 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import firestore
+import os
 
-# SQLite stores the database in a local file called 'aligntrack.db'
-SQLALCHEMY_DATABASE_URL = "sqlite:///./aligntrack.db"
+# Path to your downloaded service account key
+CREDENTIALS_PATH = "firebase-credentials.json"
 
-# create_engine needs 'check_same_thread: False' only for SQLite in FastAPI
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-)
+# Initialize Firebase ONLY if it hasn't been initialized yet
+if not firebase_admin._apps:
+    if not os.path.exists(CREDENTIALS_PATH):
+        raise FileNotFoundError(f"Missing {CREDENTIALS_PATH}! Did you download it from Firebase?")
+    
+    cred = credentials.Certificate(CREDENTIALS_PATH)
+    firebase_admin.initialize_app(cred)
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-Base = declarative_base()
+# Get a reference to the Firestore database
+db = firestore.client()
 
 def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+    return db

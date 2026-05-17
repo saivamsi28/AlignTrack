@@ -1,82 +1,87 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
 from typing import List
+import datetime
 
-import models
 import schemas
-from database import engine, get_db
+from database import get_db
 
-# Create the database tables
-models.Base.metadata.create_all(bind=engine)
+app = FastAPI(title="AlignTrack API - Firebase Edition")
 
-app = FastAPI(title="AlignTrack API")
+# Get our Firebase Firestore instance
+db = get_db()
 
-# --- HACKATHON LIFESAVER: CORS SETUP ---
-# This allows your React frontend to talk to this backend without security blocks
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, you'd put your React URL here
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# --- ROOT ENDPOINT ---
 @app.get("/")
 def read_root():
-    return {"status": "success", "message": "AlignTrack API is running!"}
+    return {"status": "success", "message": "AlignTrack API is running on Firebase Cloud!"}
 
-# --- GOAL ENDPOINTS ---
+# --- GOAL ENDPOINTS (FIREBASE) ---
 
 @app.get("/goals", response_model=List[schemas.GoalResponse])
-def get_goals(db: Session = Depends(get_db)):
-    return db.query(models.Goal).all()
+def get_goals():
+    goals_ref = db.collection("goals")
+    docs = goals_ref.stream()
+    
+    goals = []
+    for doc in docs:
+        goals.append(doc.to_dict())
+    return goals
 
 @app.post("/goals", response_model=schemas.GoalResponse)
-def create_goal(goal: schemas.GoalCreate, db: Session = Depends(get_db)):
-    db_goal = models.Goal(**goal.model_dump())
-    db.add(db_goal)
-    db.commit()
-    db.refresh(db_goal)
-    return db_goal
+def create_goal(goal: schemas.GoalCreate):
+    goal_dict = goal.model_dump()
+    # Use the React-generated ID as the Firebase Document ID
+    db.collection("goals").document(goal.id).set(goal_dict)
+    return goal_dict
 
 @app.put("/goals/{goal_id}", response_model=schemas.GoalResponse)
-def update_goal(goal_id: str, updated_goal: schemas.GoalCreate, db: Session = Depends(get_db)):
-    db_goal = db.query(models.Goal).filter(models.Goal.id == goal_id).first()
-    if not db_goal:
+def update_goal(goal_id: str, updated_goal: schemas.GoalCreate):
+    doc_ref = db.collection("goals").document(goal_id)
+    
+    if not doc_ref.get().exists:
         raise HTTPException(status_code=404, detail="Goal not found")
     
-    # Update all the fields
-    for key, value in updated_goal.model_dump().items():
-        setattr(db_goal, key, value)
-        
-    db.commit()
-    db.refresh(db_goal)
-    return db_goal
+    goal_dict = updated_goal.model_dump()
+    doc_ref.update(goal_dict)
+    return goal_dict
 
 @app.delete("/goals/{goal_id}")
-def delete_goal(goal_id: str, db: Session = Depends(get_db)):
-    db_goal = db.query(models.Goal).filter(models.Goal.id == goal_id).first()
-    if not db_goal:
+def delete_goal(goal_id: str):
+    doc_ref = db.collection("goals").document(goal_id)
+    
+    if not doc_ref.get().exists:
         raise HTTPException(status_code=404, detail="Goal not found")
     
-    db.delete(db_goal)
-    db.commit()
+    doc_ref.delete()
     return {"message": "Goal deleted successfully"}
 
-
-# --- AUDIT LOG ENDPOINTS ---
+# --- AUDIT LOG ENDPOINTS (FIREBASE) ---
 
 @app.get("/audit-logs", response_model=List[schemas.AuditLogResponse])
-def get_audit_logs(db: Session = Depends(get_db)):
-    # Get logs ordered by newest first
-    return db.query(models.AuditLog).order_by(models.AuditLog.timestamp.desc()).all()
+def get_audit_logs():
+    # Fetch logs and order by newest first
+    logs_ref = db.collection("audit_logs").order_by("timestamp", direction="DESCENDING")
+    docs = logs_ref.stream()
+    
+    logs = []
+    for doc in docs:
+        logs.append(doc.to_dict())
+    return logs
 
 @app.post("/audit-logs", response_model=schemas.AuditLogResponse)
-def create_audit_log(log: schemas.AuditLogCreate, db: Session = Depends(get_db)):
-    db_log = models.AuditLog(**log.model_dump())
-    db.add(db_log)
-    db.commit()
-    db.refresh(db_log)
-    return db_log
+def create_audit_log(log: schemas.AuditLogCreate):
+    log_dict = log.model_dump()
+    
+    # Since we dropped SQLAlchemy, we inject the timestamp manually in Python
+    log_dict["timestamp"] = datetime.datetime.now(datetime.timezone.utc)
+    
+    db.collection("audit_logs").document(log.id).set(log_dict)
+    return log_dict
