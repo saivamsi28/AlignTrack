@@ -16,15 +16,30 @@ export default function CheckInBoard({ goals, role, onUpdateGoal, currentCycle, 
 
   const calculateScore = (target: string, actual: string | undefined, uom: string): number => {
     if (actual === undefined || actual === '') return 0;
+    
     const t = parseFloat(target);
     const a = parseFloat(actual);
+
     switch (uom) {
-      case 'Zero-based': return a === 0 ? 100 : 0;
-      case 'Timeline': return actual ? 100 : 0;
+      case 'Zero':
+        return a === 0 ? 100 : 0;
+      
+      case 'Timeline':
+        if (!actual) return 0;
+        return new Date(actual) <= new Date(target) ? 100 : 0;
+      
+      case 'Max (Numeric / %)':
+        // Lower is better (Target ÷ Achievement)
+        if (isNaN(t) || isNaN(a) || a === 0) return 0;
+        const maxScore = Math.round((t / a) * 100);
+        return maxScore > 100 ? 100 : maxScore;
+
+      case 'Min (Numeric / %)':
       default:
+        // Higher is better (Achievement ÷ Target)
         if (isNaN(t) || isNaN(a) || t === 0) return 0;
-        const score = Math.round((a / t) * 100);
-        return score > 100 ? 100 : score;
+        const minScore = Math.round((a / t) * 100);
+        return minScore > 100 ? 100 : minScore; 
     }
   };
 
@@ -57,7 +72,7 @@ export default function CheckInBoard({ goals, role, onUpdateGoal, currentCycle, 
                   {goal.progressStatus || 'Not Started'}
                 </span>
               </div>
-              <p style={{ margin: '5px 0' }}><strong>Target:</strong> {goal.target} {goal.uom !== 'Numeric' && goal.uom !== 'Timeline' ? goal.uom : ''}</p>
+              <p style={{ margin: '5px 0' }}><strong>Target:</strong> {goal.target}</p>
               
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
                 <div className="progress-bar-container" style={{ flex: 1, margin: 0 }}>
@@ -88,8 +103,8 @@ export default function CheckInBoard({ goals, role, onUpdateGoal, currentCycle, 
                       <textarea rows={3} value={editForm.managerComment || ''} onChange={e => setEditForm({...editForm, managerComment: e.target.value})} />
                     </div>
                   )}
-                  <button onClick={saveUpdate} style={{ background: '#28a745', marginRight: '10px' }}>Save Update</button>
-                  <button onClick={() => setEditingId(null)} style={{ background: '#6c757d' }}>Cancel</button>
+                  <button onClick={saveUpdate} style={{ background: '#28a745', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer', marginRight: '10px' }}>Save Update</button>
+                  <button onClick={() => setEditingId(null)} style={{ background: '#6c757d', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer' }}>Cancel</button>
                 </div>
               ) : (
                 <div style={{ marginTop: '15px', background: '#f8f9fa', padding: '10px', borderRadius: '4px' }}>

@@ -13,7 +13,7 @@ export default function GoalForm({ onAddGoal, currentTotalWeightage, currentGoal
     thrustArea: '',
     title: '',
     description: '',
-    uom: 'Numeric' as UoMType,
+    uom: 'Min (Numeric / %)' as UoMType,
     target: '',
     weightage: 10
   });
@@ -22,13 +22,8 @@ export default function GoalForm({ onAddGoal, currentTotalWeightage, currentGoal
     e.preventDefault();
     setError('');
 
-    // Rule Validations
-    if (currentGoalCount >= 8) {
-      return setError('Maximum limit of 8 goals reached.');
-    }
-    if (formData.weightage < 10) {
-      return setError('Minimum weightage per goal is 10%.');
-    }
+    if (currentGoalCount >= 8) return setError('Maximum limit of 8 goals reached.');
+    if (formData.weightage < 10) return setError('Minimum weightage per goal is 10%.');
     if (currentTotalWeightage + formData.weightage > 100) {
       return setError(`Adding this exceeds 100% weightage. You only have ${100 - currentTotalWeightage}% left.`);
     }
@@ -37,8 +32,6 @@ export default function GoalForm({ onAddGoal, currentTotalWeightage, currentGoal
     }
 
     onAddGoal({ ...formData, id: crypto.randomUUID() });
-    
-    // Reset form
     setFormData({ ...formData, title: '', description: '', target: '', weightage: 10 });
   };
 
@@ -61,16 +54,16 @@ export default function GoalForm({ onAddGoal, currentTotalWeightage, currentGoal
         <div className="form-group">
           <label>Unit of Measurement (UoM)</label>
           <select value={formData.uom} onChange={e => setFormData({...formData, uom: e.target.value as UoMType})}>
-            <option value="Numeric">Numeric</option>
-            <option value="%">%</option>
+            <option value="Min (Numeric / %)">Min (Higher is better)</option>
+            <option value="Max (Numeric / %)">Max (Lower is better)</option>
             <option value="Timeline">Timeline</option>
-            <option value="Zero-based">Zero-based</option>
+            <option value="Zero">Zero-based</option>
           </select>
         </div>
 
         <div className="form-group">
           <label>Target *</label>
-          <input value={formData.target} onChange={e => setFormData({...formData, target: e.target.value})} placeholder="e.g., $500k or 2024-12-31" />
+          <input value={formData.target} onChange={e => setFormData({...formData, target: e.target.value})} placeholder="e.g., 500k or 2024-12-31" />
         </div>
 
         <div className="form-group">

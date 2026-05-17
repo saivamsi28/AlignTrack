@@ -1,4 +1,4 @@
-export type UoMType = 'Numeric' | '%' | 'Timeline' | 'Zero-based';
+export type UoMType = 'Min (Numeric / %)' | 'Max (Numeric / %)' | 'Timeline' | 'Zero';
 export type Role = 'Employee' | 'Manager' | 'Admin';
 export type SheetStatus = 'Draft' | 'Submitted' | 'Approved' | 'Rework';
 export type TrackingStatus = 'Not Started' | 'On Track' | 'Completed';

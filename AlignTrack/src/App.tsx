@@ -29,10 +29,9 @@ export default function App() {
     if (goals.length >= 8) return alert("Maximum limit of 8 goals reached.");
     handleAddGoal({
       id: crypto.randomUUID(), thrustArea: 'Corporate Operations', title: 'Reduce Operational Costs (Dept KPI)',
-      description: 'Departmental KPI mandated by leadership.', uom: '%', target: '15', weightage: 10, isShared: true
+      description: 'Departmental KPI mandated by leadership.', uom: 'Max (Numeric / %)', target: '15', weightage: 10, isShared: true
     });
   };
-
   // CSV Generation Script
   const downloadCSV = () => {
     const headers = "Goal Title,Thrust Area,Target,Weightage,Actual Achievement,Status,Manager Comment\n";
@@ -69,7 +68,7 @@ export default function App() {
       </div>
 
       <header className="card" style={{ textAlign: 'center' }}>
-        <h1>AtomQuest: Goal Setting Portal</h1>
+        <h1>AlignTrack</h1>
         <p>Status: <strong style={{ color: sheetStatus === 'Approved' ? '#28a745' : (sheetStatus === 'Rework' ? '#dc3545' : '#ffc107') }}>{sheetStatus.toUpperCase()}</strong></p>
         
         {/* Admin Dashboard */}
