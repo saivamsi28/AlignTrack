@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import GoalForm from './components/GoalForm';
 import GoalList from './components/GoalList';
 import CheckInBoard from './components/CheckInBoard';
 import { AuthProvider, useAuth } from './AuthContext';
 import Login from './components/Login';
-import type { Goal, SheetStatus, Cycle, } from './types/index';
+import type { Goal, SheetStatus, Cycle } from './types/index';
 import './index.css';
 
-
+// ⚠️ CHANGE THIS BACK TO YOUR RENDER URL
 const API_BASE = 'https://aligntrack-backend.onrender.com';
 
 const ProtectedRoute = ({ children, allowedRole }: { children: any, allowedRole: any }) => {
@@ -23,7 +23,9 @@ function AppRoutes() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [sheetStatus, setSheetStatus] = useState<SheetStatus>('Draft');
   const [currentCycle, setCurrentCycle] = useState<Cycle>('Phase 1 (Setup)');
-  const [, setAuditLogs] = useState<any[]>([]); 
+  
+  // The React Comma Trick to keep terminal clean!
+  const [, setAuditLogs] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) return; 
@@ -35,8 +37,6 @@ function AppRoutes() {
         progressStatus: g.progress_status, managerComment: g.manager_comment, cycle: g.cycle
       })));
     }).catch(err => console.error(err));
-
-    fetch(`${API_BASE}/audit-logs`).then(res => res.json()).then(data => setAuditLogs(data)).catch(err => console.error(err));
   }, [user]);
 
   const totalWeightage = goals.reduce((sum, goal) => sum + goal.weightage, 0);
@@ -49,13 +49,10 @@ function AppRoutes() {
         headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify(newLog) 
       });
-      
-      // FIX: Wait for the data FIRST, then update the state
       const savedLog = await res.json();
       setAuditLogs(prev => [savedLog, ...prev]);
-      
     } catch (err) { console.error(err); }
-  };;
+  };
 
   const handleAddGoal = async (newGoal: any) => {
     const payload = { ...newGoal, thrust_area: newGoal.thrustArea, is_shared: newGoal.isShared, sheet_status: newGoal.sheetStatus, actual_achievement: newGoal.actualAchievement, progress_status: newGoal.progressStatus, manager_comment: newGoal.managerComment };
@@ -92,50 +89,78 @@ function AppRoutes() {
     addAuditLog(`Exported Report CSV`);
   };
 
-  // --- NEW ENTERPRISE LAYOUT WRAPPER ---
-  const DashboardLayout = ({ children, title }: { children: React.ReactNode, title: string }) => (
-    <div className="app-layout">
-      {/* 1. SIDEBAR */}
-      <div className="sidebar">
-        <div className="sidebar-header">⚛️ AtomQuest</div>
-        <div className="sidebar-menu">
-          <div className="sidebar-item active">📊 Dashboard</div>
-          <div className="sidebar-item">🎯 My Goals</div>
-          {user?.role === 'Manager' && <div className="sidebar-item">👥 Team Check-ins</div>}
-          {user?.role === 'Admin' && <div className="sidebar-item">⚙️ Settings & Reports</div>}
-        </div>
-      </div>
+  // --- NEW ENTERPRISE LAYOUT WRAPPER (WITH CLICKABLE SIDEBAR) ---
+  const DashboardLayout = ({ children, title }: { children: React.ReactNode, title: string }) => {
+    const [activeTab, setActiveTab] = useState('Dashboard');
 
-      {/* 2. MAIN CONTENT & HEADER */}
-      <div className="main-content">
-        <div className="top-header">
-          <div>
-            <h2 style={{ margin: 0, color: '#0f172a' }}>{title}</h2>
-            <span style={{ fontSize: '14px', color: '#64748b' }}>Workflow Status: <strong style={{ color: '#1e40af' }}>{sheetStatus.toUpperCase()}</strong></span>
+    const handleNav = (tab: string) => {
+      setActiveTab(tab);
+      if (tab === 'Dashboard') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        window.scrollTo({ top: 350, behavior: 'smooth' });
+      }
+    };
+
+    return (
+      <div className="app-layout">
+        {/* SIDEBAR */}
+        <div className="sidebar">
+          <div className="sidebar-header">⚛️ AtomQuest</div>
+          <div className="sidebar-menu">
+            <div className={`sidebar-item ${activeTab === 'Dashboard' ? 'active' : ''}`} onClick={() => handleNav('Dashboard')}>
+              📊 Dashboard
+            </div>
+            
+            <div className={`sidebar-item ${activeTab === 'My Goals' ? 'active' : ''}`} onClick={() => handleNav('My Goals')}>
+              🎯 My Goals
+            </div>
+            
+            {user?.role === 'Manager' && (
+              <div className={`sidebar-item ${activeTab === 'Team Check-ins' ? 'active' : ''}`} onClick={() => handleNav('Team Check-ins')}>
+                👥 Team Check-ins
+              </div>
+            )}
+            
+            {user?.role === 'Admin' && (
+              <div className={`sidebar-item ${activeTab === 'Settings & Reports' ? 'active' : ''}`} onClick={() => handleNav('Settings & Reports')}>
+                ⚙️ Settings & Reports
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* MAIN CONTENT & HEADER */}
+        <div className="main-content">
+          <div className="top-header">
+            <div>
+              <h2 style={{ margin: 0, color: '#0f172a' }}>{title}</h2>
+              <span style={{ fontSize: '14px', color: '#64748b' }}>Workflow Status: <strong style={{ color: '#1e40af' }}>{sheetStatus.toUpperCase()}</strong></span>
+            </div>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+              {/* ROLE BADGE */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontWeight: 600, color: '#0f172a' }}>{user?.username}</span>
+                <span className={`role-badge badge-${user?.role}`}>{user?.role}</span>
+              </div>
+
+              {user?.role === 'Admin' && (
+                <select value={currentCycle} onChange={(e) => setCurrentCycle(e.target.value as Cycle)} style={{ width: 'auto', background: '#f1f5f9' }}>
+                  <option value="Phase 1 (Setup)">Phase 1 (Setup)</option>
+                  <option value="Q1 Check-in">Q1 Check-in</option>
+                  <option value="Q2 Check-in">Q2 Check-in</option>
+                </select>
+              )}
+              <button className="danger" onClick={logout}>Logout</button>
+            </div>
           </div>
           
-          <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-            {/* ROLE BADGE */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span style={{ fontWeight: 600, color: '#0f172a' }}>{user?.username}</span>
-              <span className={`role-badge badge-${user?.role}`}>{user?.role}</span>
-            </div>
-
-            {user?.role === 'Admin' && (
-              <select value={currentCycle} onChange={(e) => setCurrentCycle(e.target.value as Cycle)} style={{ width: 'auto', background: '#f1f5f9' }}>
-                <option value="Phase 1 (Setup)">Phase 1 (Setup)</option>
-                <option value="Q1 Check-in">Q1 Check-in</option>
-                <option value="Q2 Check-in">Q2 Check-in</option>
-              </select>
-            )}
-            <button className="danger" onClick={logout}>Logout</button>
-          </div>
+          {children}
         </div>
-        
-        {children}
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <Routes>
@@ -154,7 +179,7 @@ function AppRoutes() {
                 <p style={{ textAlign: 'center', fontWeight: 'bold' }}>Weightage: {totalWeightage}% / 100%</p>
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
                   <button className={totalWeightage === 100 ? 'success' : ''} disabled={totalWeightage !== 100} onClick={() => { setSheetStatus('Submitted'); addAuditLog('Submitted goals'); }}>
-                    {totalWeightage === 100 ? 'Submit for Approval' : `Reach 100% to Submit`}
+                    {totalWeightage === 100 ? 'Submit for Approval' : 'Reach 100% to Submit'}
                   </button>
                 </div>
                 <GoalForm onAddGoal={handleAddGoal} currentTotalWeightage={totalWeightage} currentGoalCount={goals.length} />
