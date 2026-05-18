@@ -2,7 +2,7 @@ export type UoMType = 'Min (Numeric / %)' | 'Max (Numeric / %)' | 'Timeline' | '
 export type Role = 'Employee' | 'Manager' | 'Admin';
 export type SheetStatus = 'Draft' | 'Submitted' | 'Approved' | 'Rework';
 export type TrackingStatus = 'Not Started' | 'On Track' | 'Completed';
-export type Cycle = 'Phase 1 (Setup)' | 'Q1 (July)' | 'Q2 (Oct)' | 'Q3 (Jan)' | 'Q4 (March)';
+export type Cycle = 'Phase 1 (Setup)' | 'Q1 Check-in' | 'Q2 Check-in' | 'Q3 Check-in' | 'Q4 / Annual';
 
 export interface AuditLog {
   id: string;

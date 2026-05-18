@@ -146,10 +146,12 @@ function AppRoutes() {
               </div>
 
               {user?.role === 'Admin' && (
-                <select value={currentCycle} onChange={(e) => setCurrentCycle(e.target.value as Cycle)} style={{ width: 'auto', background: '#f1f5f9' }}>
+                <select value={currentCycle} onChange={(e) => setCurrentCycle(e.target.value as Cycle)} style={{ width: 'auto', background: '#f1f5f9', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
                   <option value="Phase 1 (Setup)">Phase 1 (Setup)</option>
                   <option value="Q1 Check-in">Q1 Check-in</option>
                   <option value="Q2 Check-in">Q2 Check-in</option>
+                  <option value="Q3 Check-in">Q3 Check-in</option>
+                  <option value="Q4 / Annual">Q4 / Annual</option>
                 </select>
               )}
               <button className="danger" onClick={logout}>Logout</button>
