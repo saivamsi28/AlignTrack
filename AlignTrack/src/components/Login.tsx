@@ -16,13 +16,13 @@ export default function Login() {
     const cleanPassword = password.trim();
     
     if (cleanUsername === 'emp' && cleanPassword === 'pass') {
-      login('John Doe', 'Employee');
+      login('JS Rangi', 'Employee');
       navigate('/employee');
     } else if (cleanUsername === 'mgr' && cleanPassword === 'pass') {
-      login('Jane Smith', 'Manager');
+      login('ND Mandy', 'Manager');
       navigate('/manager');
     } else if (cleanUsername === 'admin' && cleanPassword === 'pass') {
-      login('HR Admin', 'Admin');
+      login('N Raman', 'Admin');
       navigate('/admin');
     } else {
       alert('Invalid credentials! Try emp/pass, mgr/pass, or admin/pass');
