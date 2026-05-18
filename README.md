@@ -1,8 +1,4 @@
-Your simple, professional README file is ready to be added to your repository.
-
-```python
-with open('README.md', 'w', encoding='utf-8') as f:
-    f.write("""# ⚛️ AlignTrack
+ ⚛️ AlignTrack
 
 **Enterprise Goal Alignment & Tracking Platform**
 
