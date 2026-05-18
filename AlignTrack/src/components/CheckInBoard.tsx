@@ -1,153 +1,84 @@
 export default function CheckInBoard({ goals, role, onUpdateGoal, currentCycle, addAuditLog }: any) {
   
-  // ==========================================
-  // BRD GAP 1: THE SCORING MATH ENGINE
-  // ==========================================
   const calculateScore = (target: string, actual: string, uom: string) => {
     if (!actual || isNaN(Number(actual))) return 0;
-    
-    const t = parseFloat(target);
-    const a = parseFloat(actual);
-    const uomType = (uom || '').toLowerCase();
-
+    const t = parseFloat(target), a = parseFloat(actual), uomType = (uom || '').toLowerCase();
     let score = 0;
-
-    // Type 1: Min (Higher is better - e.g., Sales)
-    if (uomType.includes('min')) {
-      score = (a / t) * 100;
-    } 
-    // Type 2: Max (Lower is better - e.g., Errors, Time)
-    else if (uomType.includes('max')) {
-      score = a === 0 ? 100 : (t / a) * 100;
-    } 
-    // Type 4: Zero (Zero equals perfect - e.g., Safety Incidents)
-    else if (uomType.includes('zero')) {
-      score = a === 0 ? 100 : 0;
-    } 
-    // Type 3: Timeline/Date (Fallback for standard exact targets)
-    else {
-      score = a >= t ? 100 : (a / t) * 100;
-    }
-
-    // Cap the score at 150% for overachievement, floor at 0%
+    if (uomType.includes('min')) score = (a / t) * 100;
+    else if (uomType.includes('max')) score = a === 0 ? 100 : (t / a) * 100;
+    else if (uomType.includes('zero')) score = a === 0 ? 100 : 0;
+    else score = a >= t ? 100 : (a / t) * 100;
     return Math.min(Math.max(score, 0), 150);
   };
 
-  // Calculate Overall Weighted Score
-  const totalWeightedScore = goals.reduce((sum: number, goal: any) => {
-    const score = calculateScore(goal.target, goal.actualAchievement, goal.uom);
-    return sum + (score * (goal.weightage / 100));
-  }, 0);
-
-  // ==========================================
-  // BRD GAP 2: THE MANAGER LOCK
-  // ==========================================
-  // The manager is locked out unless the employee has filled in EVERY goal
+  const totalWeightedScore = goals.reduce((sum: number, goal: any) => sum + (calculateScore(goal.target, goal.actualAchievement, goal.uom) * (goal.weightage / 100)), 0);
   const employeeHasSubmitted = goals.length > 0 && goals.every((g: any) => g.actualAchievement && g.progressStatus);
 
-
-  const handleEmployeeSave = (goal: any, field: string, value: string) => {
-    const updatedGoal = { ...goal, [field]: value };
-    onUpdateGoal(updatedGoal);
-  };
-
+  const handleEmployeeSave = (goal: any, field: string, value: string) => onUpdateGoal({ ...goal, [field]: value });
   const handleManagerSubmit = (goal: any) => {
-    if (!goal.managerComment) return alert("Manager comment is mandatory per BRD!");
+    if (!goal.managerComment) return alert("Manager comment is mandatory!");
     onUpdateGoal(goal);
-    addAuditLog(`Manager completed check-in for goal: ${goal.title}`);
+    addAuditLog(`Manager completed check-in: ${goal.title}`);
   };
+
+  if (goals.length === 0) return <div className="empty-state">No active goals to track.</div>;
 
   return (
-    <div className="card">
-      <h2 style={{ borderBottom: '2px solid #ccc', paddingBottom: '10px' }}>
-        {currentCycle} Tracking Board
-      </h2>
-      
-      {/* OVERALL SCORE DASHBOARD */}
-      <div style={{ background: '#e9ecef', padding: '15px', borderRadius: '8px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div>
+      {/* TOTAL SCORE DASHBOARD */}
+      <div className="card" style={{ background: '#1e293b', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h3 style={{ margin: 0 }}>Total Weighted Score</h3>
-          <p style={{ margin: 0, color: '#6c757d' }}>Calculated live based on Phase 2 BRD Math Logic</p>
+          <h2 style={{ margin: 0, color: '#f8fafc' }}>{currentCycle} Tracking</h2>
+          <p style={{ margin: 0, color: '#94a3b8' }}>Overall Weighted Achievement</p>
         </div>
-        <div style={{ fontSize: '2rem', fontWeight: 'bold', color: totalWeightedScore >= 100 ? '#28a745' : '#0056b3' }}>
+        <div style={{ fontSize: '3rem', fontWeight: '900', color: totalWeightedScore >= 100 ? '#34d399' : '#60a5fa' }}>
           {totalWeightedScore.toFixed(1)}%
         </div>
       </div>
 
-      {/* MANAGER LOCK WARNING */}
       {role === 'Manager' && !employeeHasSubmitted && (
-        <div style={{ background: '#f8d7da', color: '#721c24', padding: '15px', borderRadius: '8px', marginBottom: '20px', fontWeight: 'bold' }}>
-          🔒 Check-in Locked: The employee has not finished submitting their actual achievements for all goals yet.
+        <div className="card" style={{ background: '#fee2e2', color: '#991b1b', fontWeight: 'bold' }}>
+          🔒 Locked: Employee has not finished submitting achievements.
         </div>
       )}
 
-      {/* GOALS LIST */}
       {goals.map((goal: any, index: number) => {
         const currentScore = calculateScore(goal.target, goal.actualAchievement, goal.uom);
-        
         return (
-          <div key={goal.id} style={{ border: '1px solid #ccc', padding: '15px', marginBottom: '15px', borderRadius: '8px', background: '#fff' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <h3 style={{ margin: '0 0 10px 0' }}>{index + 1}. {goal.title}</h3>
-              <span style={{ background: '#17a2b8', color: 'white', padding: '5px 10px', borderRadius: '15px', fontWeight: 'bold' }}>
-                Score: {currentScore.toFixed(1)}%
-              </span>
+          <div className="card" key={goal.id}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0 }}>{index + 1}. {goal.title}</h3>
+              <span className="role-badge" style={{ background: '#e2e8f0', color: '#475569' }}>W: {goal.weightage}%</span>
             </div>
             
-            <p style={{ margin: '5px 0' }}><strong>Target:</strong> {goal.target} | <strong>Type:</strong> {goal.uom || 'Standard'} | <strong>Weightage:</strong> {goal.weightage}%</p>
+            {/* SCORE VISUAL PROGRESS BAR */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '8px', fontWeight: '700' }}>
+                <span>Goal Achievement Score</span>
+                <span style={{ color: currentScore >= 80 ? '#10b981' : currentScore >= 50 ? '#f59e0b' : '#ef4444' }}>{currentScore.toFixed(1)}%</span>
+              </div>
+              <div style={{ width: '100%', background: '#f1f5f9', borderRadius: '999px', height: '10px', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${Math.min(currentScore, 100)}%`, background: currentScore >= 80 ? '#10b981' : currentScore >= 50 ? '#f59e0b' : '#ef4444', transition: 'width 0.5s ease-in-out' }}></div>
+              </div>
+            </div>
             
-            <div style={{ display: 'flex', gap: '15px', marginTop: '15px' }}>
-              
-              {/* EMPLOYEE CONTROLS */}
-              <div style={{ flex: 1, background: '#f8f9fa', padding: '10px', borderRadius: '6px' }}>
-                <h4>Employee Update</h4>
-                <label>Actual Achievement:</label>
-                <input 
-                  type="text" 
-                  value={goal.actualAchievement || ''} 
-                  onChange={(e) => handleEmployeeSave(goal, 'actualAchievement', e.target.value)}
-                  disabled={role !== 'Employee'}
-                  style={{ width: '100%', marginBottom: '10px', padding: '8px' }}
-                  placeholder="Enter actual number..."
-                />
+            <div style={{ display: 'flex', gap: '20px' }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>Actual ({goal.uom || 'Standard'} | Target: {goal.target}):</label>
+                <input type="text" value={goal.actualAchievement || ''} onChange={(e) => handleEmployeeSave(goal, 'actualAchievement', e.target.value)} disabled={role !== 'Employee'} style={{ marginBottom: '12px', marginTop: '4px' }} placeholder="Enter number..." />
                 
-                <label>Status:</label>
-                <select 
-                  value={goal.progressStatus || ''} 
-                  onChange={(e) => handleEmployeeSave(goal, 'progressStatus', e.target.value)}
-                  disabled={role !== 'Employee'}
-                  style={{ width: '100%', padding: '8px' }}
-                >
-                  <option value="">Select Status...</option>
-                  <option value="Not Started">Not Started</option>
-                  <option value="On Track">On Track</option>
-                  <option value="Completed">Completed</option>
+                <label style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>Status:</label>
+                <select value={goal.progressStatus || ''} onChange={(e) => handleEmployeeSave(goal, 'progressStatus', e.target.value)} disabled={role !== 'Employee'} style={{ marginTop: '4px' }}>
+                  <option value="">Select...</option>
+                  <option value="Not Started">Not Started</option><option value="On Track">On Track</option><option value="Completed">Completed</option>
                 </select>
               </div>
 
-              {/* MANAGER CONTROLS */}
-              <div style={{ flex: 1, background: '#f8f9fa', padding: '10px', borderRadius: '6px' }}>
-                <h4>Manager Check-in</h4>
-                <label>Check-in Comment (Mandatory):</label>
-                <textarea 
-                  value={goal.managerComment || ''} 
-                  onChange={(e) => handleEmployeeSave(goal, 'managerComment', e.target.value)}
-                  disabled={role !== 'Manager' || !employeeHasSubmitted}
-                  style={{ width: '100%', height: '70px', marginBottom: '10px', padding: '8px' }}
-                  placeholder={employeeHasSubmitted ? "Enter official check-in feedback..." : "Waiting for employee..."}
-                />
-                
-                {role === 'Manager' && (
-                  <button 
-                    onClick={() => handleManagerSubmit(goal)}
-                    disabled={!employeeHasSubmitted || !goal.managerComment}
-                    style={{ background: (!employeeHasSubmitted || !goal.managerComment) ? '#ccc' : '#28a745', width: '100%' }}
-                  >
-                    Lock & Complete Check-in
-                  </button>
-                )}
+              <div style={{ flex: 1, borderLeft: '1px solid #e2e8f0', paddingLeft: '20px' }}>
+                <label style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>Manager Comment:</label>
+                <textarea value={goal.managerComment || ''} onChange={(e) => handleEmployeeSave(goal, 'managerComment', e.target.value)} disabled={role !== 'Manager' || !employeeHasSubmitted} style={{ height: '80px', marginTop: '4px', marginBottom: '12px' }} placeholder={employeeHasSubmitted ? "Enter check-in feedback..." : "Awaiting employee..."} />
+                {role === 'Manager' && <button className="success" onClick={() => handleManagerSubmit(goal)} disabled={!employeeHasSubmitted || !goal.managerComment} style={{ width: '100%' }}>Lock Check-in</button>}
               </div>
-
             </div>
           </div>
         );

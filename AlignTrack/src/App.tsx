@@ -5,13 +5,12 @@ import GoalList from './components/GoalList';
 import CheckInBoard from './components/CheckInBoard';
 import { AuthProvider, useAuth } from './AuthContext';
 import Login from './components/Login';
-import type { Goal, SheetStatus, Cycle, AuditLog } from './types/index';
+import type { Goal, SheetStatus, Cycle, } from './types/index';
 import './index.css';
 
-// ⚠️ CHANGE THIS BACK TO YOUR RENDER URL
+
 const API_BASE = 'https://aligntrack-backend.onrender.com';
 
-// --- ROUTE GUARD ---
 const ProtectedRoute = ({ children, allowedRole }: { children: any, allowedRole: any }) => {
   const { user } = useAuth();
   if (!user) return <Navigate to="/" replace />;
@@ -24,51 +23,42 @@ function AppRoutes() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [sheetStatus, setSheetStatus] = useState<SheetStatus>('Draft');
   const [currentCycle, setCurrentCycle] = useState<Cycle>('Phase 1 (Setup)');
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [, setAuditLogs] = useState<any[]>([]); 
 
-  // 1. DATABASE CONNECTION
   useEffect(() => {
     if (!user) return; 
-    fetch(`${API_BASE}/goals`)
-      .then(res => res.json())
-      .then(data => {
-        const formattedGoals = data.map((g: any) => ({
-          id: g.id, thrustArea: g.thrust_area, title: g.title, description: g.description,
-          uom: g.uom, target: g.target, weightage: g.weightage, isShared: g.is_shared,
-          sheetStatus: g.sheet_status, actualAchievement: g.actual_achievement,
-          progressStatus: g.progress_status, managerComment: g.manager_comment, cycle: g.cycle
-        }));
-        setGoals(formattedGoals);
-      })
-      .catch(err => console.error(err));
+    fetch(`${API_BASE}/goals`).then(res => res.json()).then(data => {
+      setGoals(data.map((g: any) => ({
+        id: g.id, thrustArea: g.thrust_area, title: g.title, description: g.description,
+        uom: g.uom, target: g.target, weightage: g.weightage, isShared: g.is_shared,
+        sheetStatus: g.sheet_status, actualAchievement: g.actual_achievement,
+        progressStatus: g.progress_status, managerComment: g.manager_comment, cycle: g.cycle
+      })));
+    }).catch(err => console.error(err));
 
-    fetch(`${API_BASE}/audit-logs`)
-      .then(res => res.json())
-      .then(data => setAuditLogs(data))
-      .catch(err => console.error(err));
+    fetch(`${API_BASE}/audit-logs`).then(res => res.json()).then(data => setAuditLogs(data)).catch(err => console.error(err));
   }, [user]);
 
   const totalWeightage = goals.reduce((sum, goal) => sum + goal.weightage, 0);
 
-  // 2. DATABASE FUNCTIONS (TypeScript Panic Button Applied -> 'any')
   const addAuditLog = async (action: string) => {
     const newLog = { id: crypto.randomUUID(), action: `${user?.username}: ${action}` };
     try {
-      const res = await fetch(`${API_BASE}/audit-logs`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newLog)
+      const res = await fetch(`${API_BASE}/audit-logs`, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(newLog) 
       });
+      
+      // FIX: Wait for the data FIRST, then update the state
       const savedLog = await res.json();
       setAuditLogs(prev => [savedLog, ...prev]);
+      
     } catch (err) { console.error(err); }
-  };
+  };;
 
   const handleAddGoal = async (newGoal: any) => {
-    const payload = {
-      id: newGoal.id, thrust_area: newGoal.thrustArea, title: newGoal.title, description: newGoal.description,
-      uom: newGoal.uom, target: newGoal.target, weightage: newGoal.weightage, is_shared: newGoal.isShared,
-      sheet_status: newGoal.sheetStatus, actual_achievement: newGoal.actualAchievement,
-      progress_status: newGoal.progressStatus, manager_comment: newGoal.managerComment, cycle: newGoal.cycle
-    };
+    const payload = { ...newGoal, thrust_area: newGoal.thrustArea, is_shared: newGoal.isShared, sheet_status: newGoal.sheetStatus, actual_achievement: newGoal.actualAchievement, progress_status: newGoal.progressStatus, manager_comment: newGoal.managerComment };
     try {
       await fetch(`${API_BASE}/goals`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       setGoals([...goals, newGoal]);
@@ -83,12 +73,7 @@ function AppRoutes() {
   };
   
   const handleUpdateGoal = async (updatedGoal: any) => {
-    const payload = {
-      id: updatedGoal.id, thrust_area: updatedGoal.thrustArea, title: updatedGoal.title, description: updatedGoal.description,
-      uom: updatedGoal.uom, target: updatedGoal.target, weightage: updatedGoal.weightage, is_shared: updatedGoal.isShared,
-      sheet_status: updatedGoal.sheetStatus, actual_achievement: updatedGoal.actualAchievement,
-      progress_status: updatedGoal.progressStatus, manager_comment: updatedGoal.managerComment, cycle: updatedGoal.cycle
-    };
+    const payload = { ...updatedGoal, thrust_area: updatedGoal.thrustArea, is_shared: updatedGoal.isShared, sheet_status: updatedGoal.sheetStatus, actual_achievement: updatedGoal.actualAchievement, progress_status: updatedGoal.progressStatus, manager_comment: updatedGoal.managerComment };
     try {
       await fetch(`${API_BASE}/goals/${updatedGoal.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       setGoals(goals.map(g => g.id === updatedGoal.id ? updatedGoal : g));
@@ -102,34 +87,53 @@ function AppRoutes() {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `AtomQuest_Achievement_Report.csv`;
+    a.download = `AtomQuest_Report.csv`;
     a.click();
-    addAuditLog(`Exported Achievement Report CSV`);
+    addAuditLog(`Exported Report CSV`);
   };
 
-  // --- DASHBOARD WRAPPER ---
+  // --- NEW ENTERPRISE LAYOUT WRAPPER ---
   const DashboardLayout = ({ children, title }: { children: React.ReactNode, title: string }) => (
-    <div className="container">
-      <div className="card" style={{ display: 'flex', justifyContent: 'space-between', background: '#343a40', color: 'white', alignItems: 'center' }}>
-        <div>
-          <strong>User:</strong> {user?.username} | <strong>Role:</strong> <span style={{ color: '#17a2b8' }}>{user?.role}</span>
-        </div>
-        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-          {user?.role === 'Admin' && (
-            <select value={currentCycle} onChange={(e) => setCurrentCycle(e.target.value as Cycle)} style={{ padding: '5px' }}>
-              <option value="Phase 1 (Setup)">Phase 1 (Setup)</option>
-              <option value="Q1 (July)">Q1 Check-in</option>
-              <option value="Q2 (Oct)">Q2 Check-in</option>
-            </select>
-          )}
-          <button onClick={logout} style={{ background: '#dc3545', padding: '5px 10px' }}>Logout</button>
+    <div className="app-layout">
+      {/* 1. SIDEBAR */}
+      <div className="sidebar">
+        <div className="sidebar-header">⚛️ AtomQuest</div>
+        <div className="sidebar-menu">
+          <div className="sidebar-item active">📊 Dashboard</div>
+          <div className="sidebar-item">🎯 My Goals</div>
+          {user?.role === 'Manager' && <div className="sidebar-item">👥 Team Check-ins</div>}
+          {user?.role === 'Admin' && <div className="sidebar-item">⚙️ Settings & Reports</div>}
         </div>
       </div>
-      <header className="card" style={{ textAlign: 'center' }}>
-        <h1>{title}</h1>
-        <p>Sheet Status: <strong>{sheetStatus.toUpperCase()}</strong></p>
-      </header>
-      {children}
+
+      {/* 2. MAIN CONTENT & HEADER */}
+      <div className="main-content">
+        <div className="top-header">
+          <div>
+            <h2 style={{ margin: 0, color: '#0f172a' }}>{title}</h2>
+            <span style={{ fontSize: '14px', color: '#64748b' }}>Workflow Status: <strong style={{ color: '#1e40af' }}>{sheetStatus.toUpperCase()}</strong></span>
+          </div>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+            {/* ROLE BADGE */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontWeight: 600, color: '#0f172a' }}>{user?.username}</span>
+              <span className={`role-badge badge-${user?.role}`}>{user?.role}</span>
+            </div>
+
+            {user?.role === 'Admin' && (
+              <select value={currentCycle} onChange={(e) => setCurrentCycle(e.target.value as Cycle)} style={{ width: 'auto', background: '#f1f5f9' }}>
+                <option value="Phase 1 (Setup)">Phase 1 (Setup)</option>
+                <option value="Q1 Check-in">Q1 Check-in</option>
+                <option value="Q2 Check-in">Q2 Check-in</option>
+              </select>
+            )}
+            <button className="danger" onClick={logout}>Logout</button>
+          </div>
+        </div>
+        
+        {children}
+      </div>
     </div>
   );
 
@@ -140,27 +144,24 @@ function AppRoutes() {
       {/* EMPLOYEE DASHBOARD */}
       <Route path="/employee" element={
         <ProtectedRoute allowedRole="Employee">
-          <DashboardLayout title="My Goal Sheet">
-            {sheetStatus === 'Draft' || sheetStatus === 'Rework' ? (
-              <>
-                <div className="progress-bar-container">
-                  <div className="progress-bar" style={{ width: `${totalWeightage}%`, background: totalWeightage === 100 ? '#28a745' : '#ffc107' }}></div>
+          <DashboardLayout title="Employee Portal">
+            {currentCycle === 'Phase 1 (Setup)' ? (
+              <div className="card">
+                <h3>Draft Goal Sheet</h3>
+                <div style={{ background: '#e2e8f0', borderRadius: '20px', height: '12px', marginBottom: '10px', overflow: 'hidden' }}>
+                  <div style={{ width: `${totalWeightage}%`, background: totalWeightage === 100 ? '#10b981' : '#f59e0b', height: '100%', transition: 'width 0.5s' }}></div>
                 </div>
-                <p style={{ textAlign: 'center' }}>Weightage: <strong>{totalWeightage}%</strong> / 100%</p>
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-                  <button 
-                    style={{ background: totalWeightage === 100 ? '#28a745' : '#ccc' }} 
-                    disabled={totalWeightage !== 100}
-                    onClick={() => { setSheetStatus('Submitted'); addAuditLog('Submitted goals for approval'); }}
-                  >
+                <p style={{ textAlign: 'center', fontWeight: 'bold' }}>Weightage: {totalWeightage}% / 100%</p>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <button className={totalWeightage === 100 ? 'success' : ''} disabled={totalWeightage !== 100} onClick={() => { setSheetStatus('Submitted'); addAuditLog('Submitted goals'); }}>
                     {totalWeightage === 100 ? 'Submit for Approval' : `Reach 100% to Submit`}
                   </button>
                 </div>
                 <GoalForm onAddGoal={handleAddGoal} currentTotalWeightage={totalWeightage} currentGoalCount={goals.length} />
-                <GoalList goals={goals} onRemoveGoal={handleRemoveGoal} onUpdateGoal={handleUpdateGoal} role={user?.role || 'Employee'} sheetStatus={sheetStatus} />
-              </>
+                {goals.length === 0 ? <div className="empty-state">No goals added yet. Start planning above!</div> : <GoalList goals={goals} onRemoveGoal={handleRemoveGoal} onUpdateGoal={handleUpdateGoal} role={user?.role || 'Employee'} sheetStatus={sheetStatus} />}
+              </div>
             ) : (
-              <CheckInBoard goals={goals} role={user?.role || 'Employee'} onUpdateGoal={handleUpdateGoal} currentCycle={currentCycle} addAuditLog={addAuditLog} auditLogs={auditLogs} />
+              <CheckInBoard goals={goals} role={user?.role || 'Employee'} onUpdateGoal={handleUpdateGoal} currentCycle={currentCycle} addAuditLog={addAuditLog} />
             )}
           </DashboardLayout>
         </ProtectedRoute>
@@ -169,26 +170,27 @@ function AppRoutes() {
       {/* MANAGER DASHBOARD */}
       <Route path="/manager" element={
         <ProtectedRoute allowedRole="Manager">
-          <DashboardLayout title="Team Goal Approvals">
-            
-            {/* HACKATHON FIX: Show buttons if weightage is 100%, even if state reset */}
-            {totalWeightage === 100 && sheetStatus !== 'Approved' ? (
-               <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginBottom: '20px', padding: '15px', background: '#fff3cd', border: '1px solid #ffeeba', borderRadius: '8px' }}>
-                 <p style={{ margin: 0, alignSelf: 'center', color: '#856404', fontWeight: 'bold' }}>⚠️ Employee Goals (100%) are ready for review!</p>
-                 <button style={{ background: '#28a745', fontWeight: 'bold' }} onClick={() => { setSheetStatus('Approved'); addAuditLog('Approved and locked goals'); }}>Approve & Lock Goals</button>
-                 <button style={{ background: '#dc3545', fontWeight: 'bold' }} onClick={() => { setSheetStatus('Rework'); addAuditLog('Returned goals for rework'); }}>Return for Rework</button>
-               </div>
-            ) : sheetStatus === 'Approved' ? (
-              <div className="card" style={{ textAlign: 'center', background: '#d4edda', color: '#155724', fontWeight: 'bold' }}>
-                <p>✅ Goals have been successfully Approved and Locked.</p>
-              </div>
+          <DashboardLayout title="Team Operations">
+            {currentCycle === 'Phase 1 (Setup)' ? (
+              <>
+                {totalWeightage === 100 && sheetStatus !== 'Approved' ? (
+                   <div className="card" style={{ background: '#fef3c7', borderColor: '#fde68a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                     <p style={{ margin: 0, color: '#92400e', fontWeight: 'bold' }}>⚠️ Employee goals are ready for review!</p>
+                     <div style={{ display: 'flex', gap: '10px' }}>
+                       <button className="success" onClick={() => { setSheetStatus('Approved'); addAuditLog('Approved goals'); }}>Approve & Lock</button>
+                       <button className="danger" onClick={() => { setSheetStatus('Rework'); addAuditLog('Returned for rework'); }}>Return</button>
+                     </div>
+                   </div>
+                ) : sheetStatus === 'Approved' ? (
+                  <div className="card" style={{ background: '#dcfce7', color: '#166534', fontWeight: 'bold', textAlign: 'center' }}>✅ Goals Locked for the year.</div>
+                ) : (
+                  <div className="empty-state">Waiting for employee to finalize 100% weightage.</div>
+                )}
+                {goals.length > 0 && <GoalList goals={goals} onRemoveGoal={handleRemoveGoal} onUpdateGoal={handleUpdateGoal} role={user?.role || 'Manager'} sheetStatus={sheetStatus} />}
+              </>
             ) : (
-              <div className="card" style={{ textAlign: 'center', background: '#e9ecef', color: 'black' }}>
-                <p>Waiting for employee to reach 100% total weightage.</p>
-              </div>
+              <CheckInBoard goals={goals} role={user?.role || 'Manager'} onUpdateGoal={handleUpdateGoal} currentCycle={currentCycle} addAuditLog={addAuditLog} />
             )}
-            
-            <GoalList goals={goals} onRemoveGoal={handleRemoveGoal} onUpdateGoal={handleUpdateGoal} role={user?.role || 'Manager'} sheetStatus={sheetStatus} />
           </DashboardLayout>
         </ProtectedRoute>
       } />
@@ -196,41 +198,28 @@ function AppRoutes() {
       {/* ADMIN DASHBOARD */}
       <Route path="/admin" element={
         <ProtectedRoute allowedRole="Admin">
-          <DashboardLayout title="HR Governance & Reporting">
-            <div className="card" style={{ background: '#f8d7da', border: '1px solid #f5c6cb' }}>
-               <h3>Admin Controls</h3>
-               <div style={{ display: 'flex', gap: '10px' }}>
-                 <button onClick={downloadCSV} style={{ background: '#28a745' }}>Download Org Achievement Report (CSV)</button>
+          <DashboardLayout title="Governance & Compliance">
+            
+            {/* ADMIN BIG STAT CARDS */}
+            <div style={{ display: 'flex', gap: '24px', marginBottom: '24px' }}>
+              <div className="card" style={{ flex: 1, textAlign: 'center' }}>
+                <h3 style={{ color: '#64748b', fontSize: '14px', textTransform: 'uppercase' }}>Org Completion Rate</h3>
+                <div style={{ fontSize: '42px', fontWeight: '900', color: '#1e40af' }}>18 <span style={{fontSize: '24px', color: '#94a3b8'}}>/ 24</span></div>
+              </div>
+              <div className="card" style={{ flex: 1, textAlign: 'center' }}>
+                <h3 style={{ color: '#64748b', fontSize: '14px', textTransform: 'uppercase' }}>Pending Check-ins</h3>
+                <div style={{ fontSize: '42px', fontWeight: '900', color: '#ef4444' }}>6</div>
+              </div>
+            </div>
+
+            <div className="card">
+               <h3>Administrative Actions</h3>
+               <div style={{ display: 'flex', gap: '16px' }}>
+                 <button className="success" onClick={downloadCSV}>⬇️ Download Achievement Report (CSV)</button>
                  {sheetStatus === 'Approved' && (
-                   <button onClick={() => { setSheetStatus('Rework'); addAuditLog('Admin forced sheet unlock'); }} style={{ background: '#dc3545' }}>
-                     Force Unlock Sheet (Exception)
-                   </button>
+                   <button className="danger" onClick={() => { setSheetStatus('Rework'); addAuditLog('Admin forced unlock'); }}>⚠️ Force Unlock Sheet</button>
                  )}
                </div>
-            </div>
-            
-            <div className="card">
-              <h3>Completion Status Dashboard</h3>
-              <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid #ccc' }}>
-                    <th>Employee Name</th>
-                    <th>Goal Sheet Status</th>
-                    <th>Total Weightage</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td style={{ padding: '10px 0' }}>John Doe (emp)</td>
-                    <td>
-                      <span style={{ padding: '5px 10px', borderRadius: '15px', background: sheetStatus === 'Approved' ? '#28a745' : '#ffc107', color: sheetStatus === 'Approved' ? 'white' : 'black' }}>
-                        {sheetStatus}
-                      </span>
-                    </td>
-                    <td>{totalWeightage}%</td>
-                  </tr>
-                </tbody>
-              </table>
             </div>
           </DashboardLayout>
         </ProtectedRoute>
@@ -239,12 +228,4 @@ function AppRoutes() {
   );
 }
 
-export default function App() {
-  return (
-    <AuthProvider>
-      <Router>
-        <AppRoutes />
-      </Router>
-    </AuthProvider>
-  );
-}
+export default function App() { return <AuthProvider><Router><AppRoutes /></Router></AuthProvider>; }
