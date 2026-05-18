@@ -60,11 +60,9 @@ To test the application locally, use the following placeholder credentials:
 
 *Built for the Hackathon.*
 """)
-print("README.md created successfully")
 
 ```
 Your Markdown file is ready
-[file-tag: code-generated-file-0-1779134391622941315]
 
 This README is designed to be punchy, highly readable, and exactly what evaluators or future employers want to see: a clear value proposition, the features you built, your tech stack, and how to run it. Drop this right into your GitHub repository!
 
