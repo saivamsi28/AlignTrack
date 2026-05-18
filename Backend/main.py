@@ -84,4 +84,4 @@ def create_audit_log(log: schemas.AuditLogCreate):
     log_dict["timestamp"] = datetime.datetime.now(datetime.timezone.utc)
     
     db.collection("audit_logs").document(log.id).set(log_dict)
-    return log_dream
+    return log_dict
