@@ -101,7 +101,7 @@ body {
 
 button {
   background-color: #1e40af !important; 
-  color: white;
+  color: white !important; /* Added !important to force white text */
   border: none;
   padding: 10px 18px;
   border-radius: 6px;
