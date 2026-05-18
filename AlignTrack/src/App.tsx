@@ -225,15 +225,20 @@ function AppRoutes() {
         <ProtectedRoute allowedRole="Admin">
           <DashboardLayout title="Governance & Compliance">
             
-            {/* ADMIN BIG STAT CARDS */}
+            {/* ADMIN BIG STAT CARDS (REAL-TIME METRICS) */}
             <div style={{ display: 'flex', gap: '24px', marginBottom: '24px' }}>
               <div className="card" style={{ flex: 1, textAlign: 'center' }}>
-                <h3 style={{ color: '#64748b', fontSize: '14px', textTransform: 'uppercase' }}>Org Completion Rate</h3>
-                <div style={{ fontSize: '42px', fontWeight: '900', color: '#1e40af' }}>18 <span style={{fontSize: '24px', color: '#94a3b8'}}>/ 24</span></div>
+                <h3 style={{ color: '#64748b', fontSize: '14px', textTransform: 'uppercase' }}>Goal Completion Rate</h3>
+                <div style={{ fontSize: '42px', fontWeight: '900', color: '#1e40af' }}>
+                  {goals.filter(g => g.managerComment).length} 
+                  <span style={{fontSize: '24px', color: '#94a3b8'}}> / {goals.length || 0}</span>
+                </div>
               </div>
               <div className="card" style={{ flex: 1, textAlign: 'center' }}>
                 <h3 style={{ color: '#64748b', fontSize: '14px', textTransform: 'uppercase' }}>Pending Check-ins</h3>
-                <div style={{ fontSize: '42px', fontWeight: '900', color: '#ef4444' }}>6</div>
+                <div style={{ fontSize: '42px', fontWeight: '900', color: '#ef4444' }}>
+                  {goals.length - goals.filter(g => g.managerComment).length}
+                </div>
               </div>
             </div>
 
@@ -246,6 +251,7 @@ function AppRoutes() {
                  )}
                </div>
             </div>
+            
           </DashboardLayout>
         </ProtectedRoute>
       } />
