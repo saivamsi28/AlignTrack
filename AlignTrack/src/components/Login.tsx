@@ -48,7 +48,7 @@ export default function Login() {
         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)' // Extra shadow for depth
       }}>
         <div style={{ fontSize: '3rem', marginBottom: '10px' }}>⚛️</div>
-        <h2 style={{ color: '#0f172a', margin: '0 0 5px 0' }}>AtomQuest</h2>
+        <h2 style={{ color: '#0f172a', margin: '0 0 5px 0' }}>AlignTrack</h2>
         <p style={{ color: '#64748b', marginBottom: '30px', fontSize: '14px' }}>Sign in to continue to your dashboard.</p>
         
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

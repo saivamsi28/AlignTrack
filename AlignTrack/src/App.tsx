@@ -84,7 +84,7 @@ function AppRoutes() {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `AtomQuest_Report.csv`;
+    a.download = `AlignTrack_Report.csv`;
     a.click();
     addAuditLog(`Exported Report CSV`);
   };
@@ -106,7 +106,7 @@ function AppRoutes() {
       <div className="app-layout">
         {/* SIDEBAR */}
         <div className="sidebar">
-          <div className="sidebar-header">⚛️ AtomQuest</div>
+          <div className="sidebar-header">⚛️ AlignTrack</div>
           <div className="sidebar-menu">
             <div className={`sidebar-item ${activeTab === 'Dashboard' ? 'active' : ''}`} onClick={() => handleNav('Dashboard')}>
               📊 Dashboard
