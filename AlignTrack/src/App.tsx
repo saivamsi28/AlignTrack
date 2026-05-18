@@ -8,7 +8,6 @@ import Login from './components/Login';
 import type { Goal, SheetStatus, Cycle } from './types/index';
 import './index.css';
 
-// ⚠️ CHANGE THIS BACK TO YOUR RENDER URL
 const API_BASE = 'https://aligntrack-backend.onrender.com';
 
 const ProtectedRoute = ({ children, allowedRole }: { children: any, allowedRole: any }) => {
@@ -89,7 +88,7 @@ function AppRoutes() {
     addAuditLog(`Exported Report CSV`);
   };
 
-  // --- NEW ENTERPRISE LAYOUT WRAPPER (WITH CLICKABLE SIDEBAR) ---
+  //  NEW ENTERPRISE LAYOUT WRAPPER 
   const DashboardLayout = ({ children, title }: { children: React.ReactNode, title: string }) => {
     const [activeTab, setActiveTab] = useState('Dashboard');
 

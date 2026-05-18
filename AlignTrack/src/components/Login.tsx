@@ -11,18 +11,17 @@ export default function Login() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // The trim() fix we added earlier
     const cleanUsername = username.trim();
     const cleanPassword = password.trim();
     
     if (cleanUsername === 'emp' && cleanPassword === 'pass') {
-      login('JS Rangi', 'Employee');
+      login('John Doe', 'Employee');
       navigate('/employee');
     } else if (cleanUsername === 'mgr' && cleanPassword === 'pass') {
-      login('ND Mandy', 'Manager');
+      login('Jane Smith', 'Manager');
       navigate('/manager');
     } else if (cleanUsername === 'admin' && cleanPassword === 'pass') {
-      login('N Raman', 'Admin');
+      login('HR Admin', 'Admin');
       navigate('/admin');
     } else {
       alert('Invalid credentials! Try emp/pass, mgr/pass, or admin/pass');
@@ -30,22 +29,20 @@ export default function Login() {
   };
 
   return (
-    // FULL SCREEN FLEXBOX WRAPPER (This forces dead-center alignment)
     <div style={{ 
       minHeight: '100vh', 
       display: 'flex', 
       alignItems: 'center', 
       justifyContent: 'center', 
-      backgroundColor: '#0f172a' // Deep slate background
+      backgroundColor: '#0f172a' 
     }}>
       
-      {/* THE LOGIN CARD */}
       <div className="card" style={{ 
         width: '100%', 
         maxWidth: '400px', 
         padding: '40px', 
         textAlign: 'center',
-        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)' // Extra shadow for depth
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)' 
       }}>
         <div style={{ fontSize: '3rem', marginBottom: '10px' }}>⚛️</div>
         <h2 style={{ color: '#0f172a', margin: '0 0 5px 0' }}>AlignTrack</h2>
@@ -56,7 +53,7 @@ export default function Login() {
             <label style={{ fontSize: '13px', fontWeight: '600', color: '#475569' }}>Username</label>
             <input 
               type="text" 
-              placeholder="emp / mgr / admin" 
+              placeholder="Enter the username" 
               value={username} 
               onChange={e => setUsername(e.target.value)} 
               required 
@@ -68,7 +65,7 @@ export default function Login() {
             <label style={{ fontSize: '13px', fontWeight: '600', color: '#475569' }}>Password</label>
             <input 
               type="password" 
-              placeholder="pass" 
+              placeholder="Enter the password" 
               value={password} 
               onChange={e => setPassword(e.target.value)} 
               required 
@@ -80,12 +77,6 @@ export default function Login() {
             Sign In
           </button>
         </form>
-
-        {/* HELPER TEXT FOR JUDGES */}
-        <div style={{ marginTop: '24px', fontSize: '12px', color: '#94a3b8', background: '#f8fafc', padding: '10px', borderRadius: '6px' }}>
-          <strong>Demo Credentials:</strong><br/>
-          emp / pass &nbsp;|&nbsp; mgr / pass &nbsp;|&nbsp; admin / pass
-        </div>
       </div>
       
     </div>
