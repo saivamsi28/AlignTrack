@@ -37,7 +37,7 @@ export default function GoalForm({ onAddGoal, currentTotalWeightage, currentGoal
       uom,
       weightage: weightValue,
       isShared: false,
-      sheetStatus: 'Draft',
+      sheetStatus: 'Planning', // <-- Changed this from 'Draft'
       actualAchievement: '',
       progressStatus: 'Not Started',
       managerComment: '',

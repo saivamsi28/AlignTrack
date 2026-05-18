@@ -20,7 +20,7 @@ const ProtectedRoute = ({ children, allowedRole }: { children: any, allowedRole:
 function AppRoutes() {
   const { user, logout } = useAuth();
   const [goals, setGoals] = useState<Goal[]>([]);
-  const [sheetStatus, setSheetStatus] = useState<SheetStatus>('Draft');
+  const [sheetStatus, setSheetStatus] = useState<SheetStatus>('Planning');
   const [currentCycle, setCurrentCycle] = useState<Cycle>('Phase 1 (Setup)');
   
   // The React Comma Trick to keep terminal clean!
@@ -173,7 +173,7 @@ function AppRoutes() {
           <DashboardLayout title="Employee Portal">
             {currentCycle === 'Phase 1 (Setup)' ? (
               <div className="card">
-                <h3>Draft Goal Sheet</h3>
+                <h3>Active Goal Planning</h3>
                 <div style={{ background: '#e2e8f0', borderRadius: '20px', height: '12px', marginBottom: '10px', overflow: 'hidden' }}>
                   <div style={{ width: `${totalWeightage}%`, background: totalWeightage === 100 ? '#10b981' : '#f59e0b', height: '100%', transition: 'width 0.5s' }}></div>
                 </div>
