@@ -8,7 +8,7 @@ import Login from './components/Login';
 import type { Goal, SheetStatus, Cycle } from './types/index';
 import './index.css';
 
-const API_BASE = 'https://aligntrack-backend.onrender.com/';
+const API_BASE = 'https://aligntrack-backend.onrender.com';
 
 const ProtectedRoute = ({ children, allowedRole }: { children: any, allowedRole: any }) => {
   const { user } = useAuth();
