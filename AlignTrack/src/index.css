@@ -137,3 +137,19 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #1e40af
   color: #64748b;
   font-weight: 500;
 }
+/* Mobile Responsiveness Fix */
+@media (max-width: 768px) {
+  /* Find whatever div holds both your sidebar and main content */
+  /* Assuming it uses flexbox, we force it to stack as a column */
+  div[style*="display: flex"] {
+    flex-direction: column !important;
+  }
+  
+  /* Make the sidebar full width instead of 260px */
+  div[style*="width: 260px"] {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding-bottom: 20px;
+  }
+}
