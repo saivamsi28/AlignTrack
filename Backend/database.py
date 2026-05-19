@@ -4,7 +4,7 @@ from firebase_admin import firestore
 import os
 
 # Path to your downloaded service account key
-CREDENTIALS_PATH = "firebase-credentials.json"
+CREDENTIALS_PATH = "aligntrack-68c74-ee75cc8ae7ae.json"
 
 # Initialize Firebase ONLY if it hasn't been initialized yet
 if not firebase_admin._apps:
