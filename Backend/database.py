@@ -7,7 +7,7 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) 
 
 # 2. Tell it to look for a file named "firebase.json" in that root folder
-CREDENTIALS_PATH = os.path.join(BASE_DIR, "aligntrack-68c74-ee75cc8ae7ae.json")
+CREDENTIALS_PATH = os.path.join(BASE_DIR, "68c74-firebase-adminsdk-fbsvc-7696bb17ea.json")
 
 # Initialize Firebase ONLY if it hasn't been initialized yet
 if not firebase_admin._apps:
