@@ -1,13 +1,16 @@
-import firebase_admin
-from firebase_admin import credentials
-from firebase_admin import firestore
 import os
+import firebase_admin
+from firebase_admin import credentials, firestore
 
-# 1. Find the main root folder of your project (where Render drops Secret Files)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) 
+# 1. The Bulletproof Cloud Path: Render always mounts secrets here
+RENDER_SECRET = "/etc/secrets/aligntrack-68c74-firebase-adminsdk-fbsvc-7696bb17ea.json"
 
-# 2. Tell it to look for a file named "firebase.json" in that root folder
-CREDENTIALS_PATH = os.path.join(BASE_DIR, "68c74-firebase-adminsdk-fbsvc-7696bb17ea.json")
+# 2. The Local Fallback Path: For when you are testing on your own laptop
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+LOCAL_SECRET = os.path.join(BASE_DIR, "aligntrack-68c74-firebase-adminsdk-fbsvc-7696bb17ea.json")
+
+# 3. Smart Selection: Use Render's vault if it exists, otherwise use local
+CREDENTIALS_PATH = RENDER_SECRET if os.path.exists(RENDER_SECRET) else LOCAL_SECRET
 
 # Initialize Firebase ONLY if it hasn't been initialized yet
 if not firebase_admin._apps:
